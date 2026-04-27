@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rewards — Origin Bug Bounty</title>
+  <link rel="stylesheet" href="13svqqn_tv061.css" />
+  <style>
+    :root {
+      --brand-primary: #72e1e2;
+      --brand-secondary: #9d10bf;
+      --bg-dark: #0f172b;
+      --bg-card: #1d293d;
+      --text-light: #f1f5f9;
+      --text-muted: #90a1b9;
+      --border-color: #314158;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background-color: var(--bg-dark); color: var(--text-light); font-family: Rubik, ui-sans-serif, system-ui, sans-serif; line-height: 1.6; }
+
+    .site-header { position: sticky; top: 0; z-index: 100; background-color: rgba(15,23,43,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-color); }
+    .header-inner { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .site-logo { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: inherit; }
+    .logo-icon { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.875rem; color: #fff; }
+    .logo-text { font-weight: 700; font-size: 1.1rem; letter-spacing: -0.02em; }
+    .logo-badge { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--brand-primary); border: 1px solid var(--brand-primary); padding: 2px 7px; border-radius: 999px; }
+    .site-nav { display: flex; align-items: center; gap: 0.25rem; }
+    .site-nav a { padding: 0.4rem 0.85rem; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 500; color: var(--text-muted); text-decoration: none; transition: color 0.15s, background 0.15s; }
+    .site-nav a:hover { color: var(--text-light); background: rgba(255,255,255,0.05); }
+    .site-nav a.active { color: var(--brand-primary); background: rgba(114,225,226,0.08); }
+    .header-cta { display: inline-flex; align-items: center; background: var(--brand-primary); color: #121212 !important; padding: 0.45rem 1.1rem; border-radius: 999px; font-size: 0.875rem; font-weight: 600; text-decoration: none; }
+    .header-cta:hover { background: #67cccd; }
+
+    .page-hero { max-width: 1200px; margin: 0 auto; padding: 3rem 1.5rem 2rem; }
+    .breadcrumb { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+    .breadcrumb a { color: var(--brand-primary); text-decoration: none; }
+    .page-hero h1 { font-size: clamp(1.6rem, 3.5vw, 2.5rem); font-weight: 700; line-height: 1.15; letter-spacing: -0.025em; }
+    .page-hero h1 span { color: var(--brand-primary); }
+    .page-hero p { color: var(--text-muted); font-size: 1rem; max-width: 600px; margin-top: 0.75rem; }
+
+    .page-layout { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem 4rem; display: grid; grid-template-columns: 1fr 280px; gap: 2rem; }
+    @media (max-width: 900px) { .page-layout { grid-template-columns: 1fr; } .sidebar { order: -1; } }
+
+    .content-section { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 1rem; padding: 2rem; margin-bottom: 1.5rem; }
+    .section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem; }
+    .section-title .icon { width: 28px; height: 28px; border-radius: 0.4rem; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+    .section-title .icon.red    { background: rgba(251,44,54,0.15);  color: #fb2c36; }
+    .section-title .icon.orange { background: rgba(255,139,26,0.15); color: #ff8b1a; }
+    .section-title .icon.amber  { background: rgba(252,187,0,0.15);  color: #fcbb00; }
+    .section-title .icon.green  { background: rgba(5,223,114,0.15);  color: #05df72; }
+    .section-title .icon.teal   { background: rgba(0,211,189,0.15);  color: #00d3bd; }
+    .section-title .icon.blue   { background: rgba(48,128,255,0.15); color: #3080ff; }
+
+    .body-text { color: var(--text-muted); font-size: 0.9375rem; line-height: 1.75; }
+    .body-text p + p { margin-top: 0.85rem; }
+    .body-text a { color: var(--brand-primary); }
+    hr.section-divider { border: none; border-top: 1px solid var(--border-color); margin: 1.25rem 0; }
+
+    /* Reward tiers */
+    .tier-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem; }
+    .tier-card { border-radius: 0.85rem; padding: 1.5rem; display: flex; flex-direction: column; gap: 0.4rem; border: 1px solid; }
+    .tier-card.critical { background: rgba(251,44,54,0.07);  border-color: rgba(251,44,54,0.25); }
+    .tier-card.high     { background: rgba(255,139,26,0.07); border-color: rgba(255,139,26,0.25); }
+    .tier-card.medium   { background: rgba(252,187,0,0.07);  border-color: rgba(252,187,0,0.25); }
+    .tier-card.low      { background: rgba(5,223,114,0.07);  border-color: rgba(5,223,114,0.25); }
+    .tier-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+    .tier-card.critical .tier-label { color: #fb2c36; }
+    .tier-card.high     .tier-label { color: #ff8b1a; }
+    .tier-card.medium   .tier-label { color: #fcbb00; }
+    .tier-card.low      .tier-label { color: #05df72; }
+    .tier-amount { font-size: 1.5rem; font-weight: 700; color: var(--text-light); }
+    .tier-type { font-size: 0.8rem; color: var(--text-muted); }
+
+    .reward-table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; font-size: 0.875rem; }
+    .reward-table th, .reward-table td { text-align: left; padding: 0.65rem 1rem; border-bottom: 1px solid var(--border-color); }
+    .reward-table th { font-weight: 600; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.07em; }
+    .reward-table tr:last-child td { border-bottom: none; }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+    .badge-critical { background: rgba(251,44,54,0.15); color: #fb2c36; }
+    .badge-high     { background: rgba(255,139,26,0.15); color: #ff8b1a; }
+    .badge-medium   { background: rgba(252,187,0,0.15);  color: #fcbb00; }
+    .badge-low      { background: rgba(5,223,114,0.15);  color: #05df72; }
+
+    .process-steps { display: flex; flex-direction: column; gap: 1.25rem; margin-top: 0.75rem; }
+    .process-step { display: flex; gap: 1rem; }
+    .step-num { width: 32px; height: 32px; border-radius: 50%; background: rgba(114,225,226,0.12); color: var(--brand-primary); font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; border: 1px solid rgba(114,225,226,0.25); }
+    .step-body h4 { font-size: 0.9rem; font-weight: 600; color: var(--text-light); margin-bottom: 0.2rem; }
+    .step-body p { font-size: 0.875rem; color: var(--text-muted); }
+
+    .sidebar { display: flex; flex-direction: column; gap: 1rem; }
+    .sidebar-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 1rem; padding: 1.5rem; }
+    .sidebar-card h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-light); }
+    .stat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem; }
+    .stat-row:last-child { margin-bottom: 0; }
+    .stat-label { font-size: 0.8rem; color: var(--text-muted); }
+    .stat-value { font-size: 0.9rem; font-weight: 600; }
+    .stat-value.green { color: #05df72; }
+    .nav-links { display: flex; flex-direction: column; gap: 0.3rem; }
+    .nav-links a { display: block; padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; color: var(--text-muted); text-decoration: none; transition: color 0.15s, background 0.15s; }
+    .nav-links a:hover { color: var(--text-light); background: rgba(255,255,255,0.05); }
+    .nav-links a.active { color: var(--brand-primary); background: rgba(114,225,226,0.08); }
+
+    .cta-block { background: linear-gradient(135deg, rgba(114,225,226,0.08), rgba(157,16,191,0.08)); border: 1px solid rgba(114,225,226,0.2); border-radius: 1rem; padding: 2rem; text-align: center; }
+    .cta-block h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .cta-block p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.2rem; }
+    .cta-btn { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--brand-primary); color: #121212; padding: 0.65rem 1.5rem; border-radius: 999px; font-weight: 600; font-size: 0.9rem; text-decoration: none; }
+    .cta-btn:hover { background: #67cccd; }
+
+    .site-footer { border-top: 1px solid var(--border-color); background: rgba(15,23,43,0.8); padding: 3rem 1.5rem 2rem; }
+    .footer-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 2.5rem; }
+    @media (max-width: 768px) { .footer-inner { grid-template-columns: 1fr 1fr; } .footer-brand { grid-column: 1 / -1; } }
+    .footer-brand p { color: var(--text-muted); font-size: 0.875rem; max-width: 280px; line-height: 1.6; }
+    .footer-col h4 { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 1rem; }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
+    .footer-col ul li a { font-size: 0.875rem; color: var(--text-muted); text-decoration: none; }
+    .footer-col ul li a:hover { color: var(--text-light); }
+    .footer-bottom { max-width: 1200px; margin: 2rem auto 0; padding-top: 1.5rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="site-logo">
+        <div class="logo-icon">OB</div>
+        <span class="logo-text">Origin</span>
+        <span class="logo-badge">Bug Bounty</span>
+      </a>
+      <nav class="site-nav">
+        <a href="index.html">Overview</a>
+        <a href="mainnet.html">Mainnet</a>
+        <a href="testnet.html">Testnet</a>
+        <a href="documentation.html">Docs</a>
+        <a href="smart-contracts.html">Smart Contracts</a>
+        <a href="rewards.html" class="active">Rewards</a>
+      </nav>
+      <a href="https://immunefi.com/bug-bounty/originprotocol/" class="header-cta" target="_blank" rel="noopener">Submit a Bug</a>
+    </div>
+  </header>
+
+  <div class="page-hero">
+    <p class="breadcrumb"><a href="index.html">Overview</a> / Rewards</p>
+    <h1>Bug Bounty <span>Rewards</span></h1>
+    <p>Understand how rewards are calculated, what severities are eligible, and how payouts are processed.</p>
+  </div>
+
+  <div class="page-layout">
+    <main>
+
+      <!-- Reward Overview -->
+      <div class="content-section">
+        <h2 class="section-title"><span class="icon teal">💰</span> Reward Overview</h2>
+        <div class="body-text">
+          <p>
+            Origin Protocol provides rewards in <strong style="color:var(--text-light)">OUSD on Ethereum</strong>,
+            denominated in USD. Rewards are distributed according to the impact of the vulnerability, assessed
+            using the <strong style="color:var(--text-light)">Immunefi Vulnerability Severity Classification System V2.2</strong>.
+          </p>
+          <p>
+            This is a simplified 5-level scale with separate tracks for smart contracts/blockchains and
+            websites/applications. The scale covers everything from the consequence of exploitation to the
+            privilege required and the likelihood of a successful exploit being executed in production.
+          </p>
+          <p>
+            Payouts are handled directly by the Origin Protocol team and are denominated in USD, paid in OUSD.
+            No KYC information is required for payout processing.
+          </p>
+        </div>
+        <div class="tier-cards">
+          <div class="tier-card critical">
+            <span class="tier-label">Critical</span>
+            <span class="tier-amount">$1,000,000</span>
+            <span class="tier-type">Smart Contract (max)</span>
+          </div>
+          <div class="tier-card high">
+            <span class="tier-label">High</span>
+            <span class="tier-amount">$15,000</span>
+            <span class="tier-type">Smart Contract (flat)</span>
+          </div>
+          <div class="tier-card medium">
+            <span class="tier-label">Medium</span>
+            <span class="tier-amount">$5,000</span>
+            <span class="tier-type">Smart Contract (flat)</span>
+          </div>
+          <div class="tier-card low">
+            <span class="tier-label">Low</span>
+            <span class="tier-amount">$1,000</span>
+            <span class="tier-type">Smart Contract (flat)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reward Table by Category -->
+      <div class="content-section">
+        <h2 class="section-title"><span class="icon blue">📊</span> Rewards by Threat Level</h2>
+        <div class="body-text">
+          <p>The following table details reward ranges for each severity level across Smart Contract and Web/App categories.</p>
+        </div>
+        <table class="reward-table">
+          <thead>
+            <tr><th>Severity</th><th>Category</th><th>Reward</th><th>Note</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-critical">Critical</span></td>
+              <td>Smart Contract</td>
+              <td style="font-weight:700;color:var(--brand-primary)">Up to $1,000,000</td>
+              <td style="color:var(--text-muted);font-size:0.8rem">10% of funds at risk; min $50k</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-high">High</span></td>
+              <td>Smart Contract</td>
+              <td style="font-weight:700">$15,000</td>
+              <td style="color:var(--text-muted);font-size:0.8rem">Flat rate · Primacy of Impact</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-medium">Medium</span></td>
+              <td>Smart Contract</td>
+              <td style="font-weight:700">$5,000</td>
+              <td style="color:var(--text-muted);font-size:0.8rem">Flat rate</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-low">Low</span></td>
+              <td>Smart Contract</td>
+              <td style="font-weight:700">$1,000</td>
+              <td style="color:var(--text-muted);font-size:0.8rem">Flat rate</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-critical">Critical</span></td>
+              <td>Website / App</td>
+              <td style="font-weight:700">$25,000</td>
+              <td style="color:var(--text-muted);font-size:0.8rem">Flat rate · Primacy of Impact</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-high">High</span></td>
+              <td>Website / App</td>
+              <td style="font-weight:700">$5,000</td>
+              <td style="color:var(--text-muted);font-size:0.8rem">Flat rate</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-medium">Medium</span></td>
+              <td>Website / App</td>
+              <td style="font-weight:700">$1,000</td>
+              <td style="color:var(--text-muted);font-size:0.8rem">Flat rate</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Critical Cap Details -->
+      <div class="content-section">
+        <h2 class="section-title"><span class="icon red">⚖</span> Critical Reward Calculation</h2>
+        <div class="body-text">
+          <p>
+            Critical smart contract vulnerabilities are subject to a reward cap of
+            <strong style="color:var(--text-light)">10% of the economic damage</strong> caused, with a
+            maximum payout of <strong style="color:var(--text-light)">$1,000,000 USD</strong>.
+          </p>
+          <p>
+            There is a guaranteed minimum of <strong style="color:var(--text-light)">$50,000 USD</strong> for
+            any confirmed Critical smart contract vulnerability, regardless of the funds-at-risk calculation.
+            The primary consideration for the reward amount is the funds directly affected, along with PR and
+            brand impact considerations at the discretion of the Origin Protocol team.
+          </p>
+          <p>
+            For example: if a vulnerability puts $500,000 in user funds at risk, the reward would be
+            $50,000 (10% cap). If a vulnerability risks $20,000,000, the reward would be $1,000,000 (max cap).
+            A vulnerability risking only $200,000 would still receive the $50,000 minimum.
+          </p>
+        </div>
+      </div>
+
+      <!-- Payout Process -->
+      <div class="content-section">
+        <h2 class="section-title"><span class="icon green">🔄</span> Payout Process</h2>
+        <div class="body-text">
+          <p>
+            Once a valid vulnerability is confirmed, payouts follow a standardised process managed by
+            Immunefi on behalf of Origin Protocol. Understanding this process will help you set expectations
+            after submitting a report.
+          </p>
+        </div>
+        <div class="process-steps">
+          <div class="process-step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h4>Submit Report</h4>
+              <p>Submit your vulnerability report through the Immunefi platform with a complete PoC and impact assessment.</p>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h4>Triage &amp; Validation</h4>
+              <p>The Origin Protocol security team reviews and validates the report. Managed triage is enabled — average resolution time is 8 hours.</p>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h4>Severity Assessment</h4>
+              <p>The team assesses the severity and calculates the reward using the Immunefi V2.2 classification system.</p>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <h4>Payout in OUSD</h4>
+              <p>Reward is denominated in USD and paid in OUSD on Ethereum. No KYC is required. Payout is processed through Immunefi.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cta-block">
+        <h3>Ready to Hunt?</h3>
+        <p>Found a vulnerability in Origin Protocol? Submit your report through Immunefi and earn up to $1,000,000.</p>
+        <a href="https://immunefi.com/bug-bounty/originprotocol/" class="cta-btn" target="_blank" rel="noopener">
+          Submit a Bug Report →
+        </a>
+      </div>
+
+    </main>
+
+    <aside class="sidebar">
+      <div class="sidebar-card">
+        <h3>Reward Summary</h3>
+        <div class="stat-row"><span class="badge badge-critical">Critical SC</span><span class="stat-value" style="color:#fb2c36">Up to $1M</span></div>
+        <div class="stat-row"><span class="badge badge-high">High SC</span><span class="stat-value">$15,000</span></div>
+        <div class="stat-row"><span class="badge badge-medium">Medium SC</span><span class="stat-value">$5,000</span></div>
+        <div class="stat-row"><span class="badge badge-low">Low SC</span><span class="stat-value">$1,000</span></div>
+        <hr style="border:none;border-top:1px solid var(--border-color);margin:0.75rem 0">
+        <div class="stat-row"><span class="stat-label">Total Paid</span><span class="stat-value green">$83.3k</span></div>
+        <div class="stat-row"><span class="stat-label">Paid Reports</span><span class="stat-value">33</span></div>
+        <div class="stat-row"><span class="stat-label">Currency</span><span class="stat-value">OUSD</span></div>
+        <div class="stat-row"><span class="stat-label">KYC Required</span><span class="stat-value">No</span></div>
+      </div>
+      <div class="sidebar-card">
+        <h3>Pages</h3>
+        <div class="nav-links">
+          <a href="index.html">Overview</a>
+          <a href="mainnet.html">Mainnet Assets</a>
+          <a href="testnet.html">Testnet Assets</a>
+          <a href="documentation.html">Documentation</a>
+          <a href="smart-contracts.html">Smart Contracts</a>
+          <a href="rewards.html" class="active">Rewards</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem">
+          <div class="logo-icon" style="width:28px;height:28px;font-size:0.75rem">OB</div>
+          <span style="font-weight:700">Origin Bug Bounty</span>
+        </div>
+        <p>Securing DeFi through responsible disclosure. Report vulnerabilities in Origin Protocol smart contracts and applications.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Program</h4>
+        <ul>
+          <li><a href="index.html">Overview</a></li>
+          <li><a href="rewards.html">Rewards</a></li>
+          <li><a href="mainnet.html">Mainnet</a></li>
+          <li><a href="testnet.html">Testnet</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Technical</h4>
+        <ul>
+          <li><a href="smart-contracts.html">Smart Contracts</a></li>
+          <li><a href="documentation.html">Documentation</a></li>
+          <li><a href="https://docs.ousd.com/" target="_blank" rel="noopener">OUSD Docs</a></li>
+          <li><a href="https://github.com/OriginProtocol" target="_blank" rel="noopener">GitHub</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="https://immunefi.com/terms/" target="_blank" rel="noopener">Terms of Use</a></li>
+          <li><a href="https://immunefi.com/privacy/" target="_blank" rel="noopener">Privacy Policy</a></li>
+          <li><a href="https://immunefi.com/responsible-publication/" target="_blank" rel="noopener">Responsible Disclosure</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Origin Bug Bounty · Powered by Immunefi</span>
+      <span>Last updated: April 17, 2026</span>
+    </div>
+  </footer>
+
+</body>
+</html>

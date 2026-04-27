@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Testnet Assets — Origin Bug Bounty</title>
+  <link rel="stylesheet" href="13svqqn_tv061.css" />
+  <style>
+    :root {
+      --brand-primary: #72e1e2;
+      --brand-secondary: #9d10bf;
+      --bg-dark: #0f172b;
+      --bg-card: #1d293d;
+      --text-light: #f1f5f9;
+      --text-muted: #90a1b9;
+      --border-color: #314158;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background-color: var(--bg-dark); color: var(--text-light); font-family: Rubik, ui-sans-serif, system-ui, sans-serif; line-height: 1.6; }
+
+    .site-header { position: sticky; top: 0; z-index: 100; background-color: rgba(15,23,43,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-color); }
+    .header-inner { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .site-logo { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: inherit; }
+    .logo-icon { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.875rem; color: #fff; }
+    .logo-text { font-weight: 700; font-size: 1.1rem; letter-spacing: -0.02em; }
+    .logo-badge { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--brand-primary); border: 1px solid var(--brand-primary); padding: 2px 7px; border-radius: 999px; }
+    .site-nav { display: flex; align-items: center; gap: 0.25rem; }
+    .site-nav a { padding: 0.4rem 0.85rem; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 500; color: var(--text-muted); text-decoration: none; transition: color 0.15s, background 0.15s; }
+    .site-nav a:hover { color: var(--text-light); background: rgba(255,255,255,0.05); }
+    .site-nav a.active { color: var(--brand-primary); background: rgba(114,225,226,0.08); }
+    .header-cta { display: inline-flex; align-items: center; background: var(--brand-primary); color: #121212 !important; padding: 0.45rem 1.1rem; border-radius: 999px; font-size: 0.875rem; font-weight: 600; text-decoration: none; }
+    .header-cta:hover { background: #67cccd; }
+
+    .page-hero { max-width: 1200px; margin: 0 auto; padding: 3rem 1.5rem 2rem; }
+    .breadcrumb { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+    .breadcrumb a { color: var(--brand-primary); text-decoration: none; }
+    .page-hero h1 { font-size: clamp(1.6rem, 3.5vw, 2.5rem); font-weight: 700; line-height: 1.15; letter-spacing: -0.025em; }
+    .page-hero h1 span { color: var(--brand-primary); }
+    .page-hero p { color: var(--text-muted); font-size: 1rem; max-width: 600px; margin-top: 0.75rem; }
+
+    .warning-banner { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+    .warning-banner .warn { background: rgba(252,187,0,0.1); border: 1px solid rgba(252,187,0,0.3); border-radius: 0.6rem; padding: 0.85rem 1.2rem; display: flex; align-items: flex-start; gap: 0.75rem; font-size: 0.875rem; color: #fcbb00; }
+    .warning-banner .warn strong { color: #fef3c6; }
+
+    .page-layout { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1.5rem 4rem; display: grid; grid-template-columns: 1fr 280px; gap: 2rem; }
+    @media (max-width: 900px) { .page-layout { grid-template-columns: 1fr; } .sidebar { order: -1; } }
+
+    .content-section { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 1rem; padding: 2rem; margin-bottom: 1.5rem; }
+    .section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem; }
+    .section-title .icon { width: 28px; height: 28px; border-radius: 0.4rem; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+    .section-title .icon.amber { background: rgba(252,187,0,0.15); color: #fcbb00; }
+    .section-title .icon.blue  { background: rgba(48,128,255,0.15); color: #3080ff; }
+    .section-title .icon.green { background: rgba(5,223,114,0.15); color: #05df72; }
+    .section-title .icon.pink  { background: rgba(246,51,154,0.15); color: #f6339a; }
+    .section-title .icon.teal  { background: rgba(0,211,189,0.15); color: #00d3bd; }
+
+    .body-text { color: var(--text-muted); font-size: 0.9375rem; line-height: 1.75; }
+    .body-text p + p { margin-top: 0.85rem; }
+    .body-text a { color: var(--brand-primary); }
+    hr.section-divider { border: none; border-top: 1px solid var(--border-color); margin: 1.25rem 0; }
+
+    .contract-table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; font-size: 0.875rem; }
+    .contract-table th, .contract-table td { text-align: left; padding: 0.65rem 1rem; border-bottom: 1px solid var(--border-color); }
+    .contract-table th { font-weight: 600; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.07em; }
+    .contract-table td:last-child { font-family: ui-monospace, monospace; font-size: 0.78rem; color: var(--brand-primary); word-break: break-all; }
+    .contract-table tr:last-child td { border-bottom: none; }
+
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+    .badge-info   { background: rgba(48,128,255,0.15); color: #3080ff; }
+    .badge-amber  { background: rgba(252,187,0,0.15);  color: #fcbb00; }
+    .badge-high   { background: rgba(255,139,26,0.15); color: #ff8b1a; }
+
+    .steps-list { list-style: none; counter-reset: steps; display: flex; flex-direction: column; gap: 1rem; margin-top: 0.5rem; }
+    .steps-list li { display: flex; align-items: flex-start; gap: 0.85rem; color: var(--text-muted); font-size: 0.9375rem; counter-increment: steps; }
+    .steps-list li::before { content: counter(steps); min-width: 24px; height: 24px; border-radius: 50%; background: rgba(114,225,226,0.15); color: var(--brand-primary); font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+
+    .sidebar { display: flex; flex-direction: column; gap: 1rem; }
+    .sidebar-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 1rem; padding: 1.5rem; }
+    .sidebar-card h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-light); }
+    .stat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem; }
+    .stat-row:last-child { margin-bottom: 0; }
+    .stat-label { font-size: 0.8rem; color: var(--text-muted); }
+    .stat-value { font-size: 0.9rem; font-weight: 600; }
+    .stat-value.amber { color: #fcbb00; }
+    .nav-links { display: flex; flex-direction: column; gap: 0.3rem; }
+    .nav-links a { display: block; padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; color: var(--text-muted); text-decoration: none; transition: color 0.15s, background 0.15s; }
+    .nav-links a:hover { color: var(--text-light); background: rgba(255,255,255,0.05); }
+    .nav-links a.active { color: var(--brand-primary); background: rgba(114,225,226,0.08); }
+
+    .site-footer { border-top: 1px solid var(--border-color); background: rgba(15,23,43,0.8); padding: 3rem 1.5rem 2rem; }
+    .footer-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 2.5rem; }
+    @media (max-width: 768px) { .footer-inner { grid-template-columns: 1fr 1fr; } .footer-brand { grid-column: 1 / -1; } }
+    .footer-brand p { color: var(--text-muted); font-size: 0.875rem; max-width: 280px; line-height: 1.6; }
+    .footer-col h4 { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 1rem; }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
+    .footer-col ul li a { font-size: 0.875rem; color: var(--text-muted); text-decoration: none; }
+    .footer-col ul li a:hover { color: var(--text-light); }
+    .footer-bottom { max-width: 1200px; margin: 2rem auto 0; padding-top: 1.5rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="site-logo">
+        <div class="logo-icon">OB</div>
+        <span class="logo-text">Origin</span>
+        <span class="logo-badge">Bug Bounty</span>
+      </a>
+      <nav class="site-nav">
+        <a href="index.html">Overview</a>
+        <a href="mainnet.html">Mainnet</a>
+        <a href="testnet.html" class="active">Testnet</a>
+        <a href="documentation.html">Docs</a>
+        <a href="smart-contracts.html">Smart Contracts</a>
+        <a href="rewards.html">Rewards</a>
+      </nav>
+      <a href="https://immunefi.com/bug-bounty/originprotocol/" class="header-cta" target="_blank" rel="noopener">Submit a Bug</a>
+    </div>
+  </header>
+
+  <div class="page-hero">
+    <p class="breadcrumb"><a href="index.html">Overview</a> / Testnet Assets</p>
+    <h1>Testnet <span>Assets</span></h1>
+    <p>Reference deployments on public testnets to support local fork testing and development validation.</p>
+  </div>
+
+  <div class="warning-banner">
+    <div class="warn">
+      <span>⚠</span>
+      <p><strong>No live testnet testing allowed.</strong> You must not interact with any live testnet or mainnet deployment for bug-hunting purposes. All testing must be performed on a <strong>local fork</strong> of either the mainnet or testnet state using tools such as Hardhat or Foundry.</p>
+    </div>
+  </div>
+
+  <div class="page-layout">
+    <main>
+
+      <!-- Testnet Policy -->
+      <div class="content-section">
+        <h2 class="section-title"><span class="icon amber">⚠</span> Testnet Policy</h2>
+        <div class="body-text">
+          <p>
+            Origin Protocol's bug bounty program explicitly prohibits any testing on live public testnets or mainnet.
+            Testnet reference addresses are provided solely to help researchers understand the deployment architecture
+            and set up accurate local forks for vulnerability research.
+          </p>
+          <p>
+            Sending transactions to testnet contracts outside of a controlled local fork environment is considered
+            a violation of the program rules and will result in disqualification from reward eligibility. This policy
+            protects the integrity of test environments and prevents unintentional disruption to other developers.
+          </p>
+          <p>
+            When preparing a Proof of Concept, use a locally forked network that mirrors the state of the target
+            environment. Hardhat's <code style="font-size:0.85em;color:var(--brand-primary)">--fork</code> flag or
+            Foundry's <code style="font-size:0.85em;color:var(--brand-primary)">anvil --fork-url</code> are the
+            recommended tools for this purpose.
+          </p>
+        </div>
+      </div>
+
+      <!-- Testnet Deployments -->
+      <div class="content-section">
+        <h2 class="section-title"><span class="icon blue">🧪</span> Goerli / Sepolia Reference Contracts</h2>
+        <div class="body-text">
+          <p>
+            The following contracts were deployed on public testnets for development and integration testing purposes.
+            They reflect the same code logic as mainnet but use test tokens and may be at different upgrade versions.
+            Use these addresses only to build local forks — do not interact with them directly.
+          </p>
+        </div>
+        <table class="contract-table">
+          <thead>
+            <tr><th>Contract</th><th>Network</th><th>Address</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>OUSD Token (test)</td><td><span class="badge badge-amber">Sepolia</span></td><td>0xB0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B1</td></tr>
+            <tr><td>OUSD Vault (test)</td><td><span class="badge badge-amber">Sepolia</span></td><td>0xA1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A2</td></tr>
+            <tr><td>OETH Token (test)</td><td><span class="badge badge-amber">Sepolia</span></td><td>0xC2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C3</td></tr>
+            <tr><td>OETH Vault (test)</td><td><span class="badge badge-amber">Sepolia</span></td><td>0xD3D3D3D3D3D3D3D3D3D3D3D3D3D3D3D3D3D3D3D4</td></tr>
+            <tr><td>Mock DAI</td><td><span class="badge badge-amber">Sepolia</span></td><td>0xE4E4E4E4E4E4E4E4E4E4E4E4E4E4E4E4E4E4E4E5</td></tr>
+            <tr><td>Mock USDC</td><td><span class="badge badge-amber">Sepolia</span></td><td>0xF5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F6</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Local Fork Setup -->
+      <div class="content-section">
+        <h2 class="section-title"><span class="icon green">⚙</span> Setting Up a Local Fork</h2>
+        <div class="body-text">
+          <p>
+            To reproduce a vulnerability or develop a PoC, you should create a local fork of Ethereum mainnet.
+            Below are the recommended steps using Foundry's Anvil tool.
+          </p>
+        </div>
+        <ol class="steps-list">
+          <li>Install Foundry by running the official installer: <code style="color:var(--brand-primary);font-size:0.85em">curl -L https://foundry.paradigm.xyz | bash</code></li>
+          <li>Start a local fork of mainnet with: <code style="color:var(--brand-primary);font-size:0.85em">anvil --fork-url &lt;YOUR_RPC_URL&gt; --fork-block-number &lt;BLOCK&gt;</code></li>
+          <li>Deploy or interact with the Origin contracts using the mainnet addresses listed on the Mainnet Assets page.</li>
+          <li>Write your exploit script using Foundry's test framework and ensure it runs end-to-end on the local fork.</li>
+          <li>Document the attack vector, root cause, and estimated impact before submitting to Immunefi.</li>
+        </ol>
+      </div>
+
+      <!-- Out-of-Scope Testnet Activities -->
+      <div class="content-section">
+        <h2 class="section-title"><span class="icon pink">🚫</span> Out-of-Scope Testnet Activities</h2>
+        <div class="body-text">
+          <p>
+            Even on testnets, the following activities are considered out of scope and may result in permanent
+            disqualification from the bounty program:
+          </p>
+          <ul style="margin-top:0.75rem; padding-left:1.2rem; color:var(--text-muted); line-height:1.9">
+            <li>Performing denial-of-service attacks against testnet RPC endpoints</li>
+            <li>Spam transactions that degrade the performance of testnet infrastructure</li>
+            <li>Interacting with contracts owned by other projects on the same testnet</li>
+            <li>Attempting to manipulate shared oracle price feeds on public testnets</li>
+            <li>Exploiting testnet faucet contracts or bridges unrelated to Origin Protocol</li>
+          </ul>
+          <p style="margin-top:0.85rem">
+            All PoC submissions must clearly state the block number at which the fork was taken and include
+            reproducible steps that allow the Origin Protocol security team to verify the findings independently.
+          </p>
+        </div>
+      </div>
+
+    </main>
+
+    <aside class="sidebar">
+      <div class="sidebar-card">
+        <h3>Testnet Info</h3>
+        <div class="stat-row"><span class="stat-label">Live Testing</span><span class="stat-value" style="color:#fb2c36">Prohibited</span></div>
+        <div class="stat-row"><span class="stat-label">Local Forks</span><span class="stat-value" style="color:#05df72">Allowed</span></div>
+        <div class="stat-row"><span class="stat-label">Recommended Tool</span><span class="stat-value">Foundry</span></div>
+        <div class="stat-row"><span class="stat-label">Ref Networks</span><span class="stat-value">Sepolia</span></div>
+      </div>
+      <div class="sidebar-card">
+        <h3>Pages</h3>
+        <div class="nav-links">
+          <a href="index.html">Overview</a>
+          <a href="mainnet.html">Mainnet Assets</a>
+          <a href="testnet.html" class="active">Testnet Assets</a>
+          <a href="documentation.html">Documentation</a>
+          <a href="smart-contracts.html">Smart Contracts</a>
+          <a href="rewards.html">Rewards</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem">
+          <div class="logo-icon" style="width:28px;height:28px;font-size:0.75rem">OB</div>
+          <span style="font-weight:700">Origin Bug Bounty</span>
+        </div>
+        <p>Securing DeFi through responsible disclosure. Report vulnerabilities in Origin Protocol smart contracts and applications.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Program</h4>
+        <ul>
+          <li><a href="index.html">Overview</a></li>
+          <li><a href="rewards.html">Rewards</a></li>
+          <li><a href="mainnet.html">Mainnet</a></li>
+          <li><a href="testnet.html">Testnet</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Technical</h4>
+        <ul>
+          <li><a href="smart-contracts.html">Smart Contracts</a></li>
+          <li><a href="documentation.html">Documentation</a></li>
+          <li><a href="https://docs.ousd.com/" target="_blank" rel="noopener">OUSD Docs</a></li>
+          <li><a href="https://github.com/OriginProtocol" target="_blank" rel="noopener">GitHub</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="https://immunefi.com/terms/" target="_blank" rel="noopener">Terms of Use</a></li>
+          <li><a href="https://immunefi.com/privacy/" target="_blank" rel="noopener">Privacy Policy</a></li>
+          <li><a href="https://immunefi.com/responsible-publication/" target="_blank" rel="noopener">Responsible Disclosure</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Origin Bug Bounty · Powered by Immunefi</span>
+      <span>Last updated: April 17, 2026</span>
+    </div>
+  </footer>
+
+</body>
+</html>

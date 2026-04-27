@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mainnet Assets — Origin Bug Bounty</title>
+  <link rel="stylesheet" href="13svqqn_tv061.css" />
+  <style>
+    :root {
+      --brand-primary: #72e1e2;
+      --brand-secondary: #9d10bf;
+      --brand-accent: #f01580;
+      --bg-dark: #0f172b;
+      --bg-card: #1d293d;
+      --text-light: #f1f5f9;
+      --text-muted: #90a1b9;
+      --border-color: #314158;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background-color: var(--bg-dark); color: var(--text-light); font-family: Rubik, ui-sans-serif, system-ui, sans-serif; line-height: 1.6; }
+
+    .site-header {
+      position: sticky; top: 0; z-index: 100;
+      background-color: rgba(15,23,43,0.95); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+    }
+    .header-inner {
+      max-width: 1200px; margin: 0 auto; padding: 0 1.5rem;
+      display: flex; align-items: center; justify-content: space-between; height: 64px;
+    }
+    .site-logo { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: inherit; }
+    .logo-icon {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.875rem; color: #fff;
+    }
+    .logo-text { font-weight: 700; font-size: 1.1rem; letter-spacing: -0.02em; }
+    .logo-badge {
+      font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--brand-primary);
+      border: 1px solid var(--brand-primary); padding: 2px 7px; border-radius: 999px;
+    }
+    .site-nav { display: flex; align-items: center; gap: 0.25rem; }
+    .site-nav a {
+      padding: 0.4rem 0.85rem; border-radius: 0.375rem;
+      font-size: 0.875rem; font-weight: 500; color: var(--text-muted);
+      text-decoration: none; transition: color 0.15s, background 0.15s;
+    }
+    .site-nav a:hover { color: var(--text-light); background: rgba(255,255,255,0.05); }
+    .site-nav a.active { color: var(--brand-primary); background: rgba(114,225,226,0.08); }
+    .header-cta {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      background: var(--brand-primary); color: #121212 !important;
+      padding: 0.45rem 1.1rem; border-radius: 999px;
+      font-size: 0.875rem; font-weight: 600; text-decoration: none; transition: background 0.15s;
+    }
+    .header-cta:hover { background: #67cccd; }
+
+    .page-hero {
+      max-width: 1200px; margin: 0 auto; padding: 3rem 1.5rem 2rem;
+    }
+    .breadcrumb { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+    .breadcrumb a { color: var(--brand-primary); text-decoration: none; }
+    .page-hero h1 { font-size: clamp(1.6rem, 3.5vw, 2.5rem); font-weight: 700; line-height: 1.15; letter-spacing: -0.025em; }
+    .page-hero h1 span { color: var(--brand-primary); }
+    .page-hero p { color: var(--text-muted); font-size: 1rem; max-width: 600px; margin-top: 0.75rem; }
+
+    .page-layout {
+      max-width: 1200px; margin: 0 auto; padding: 0 1.5rem 4rem;
+      display: grid; grid-template-columns: 1fr 280px; gap: 2rem;
+    }
+    @media (max-width: 900px) { .page-layout { grid-template-columns: 1fr; } .sidebar { order: -1; } }
+
+    .content-section {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: 1rem; padding: 2rem; margin-bottom: 1.5rem;
+    }
+    .section-title {
+      font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .section-title .icon {
+      width: 28px; height: 28px; border-radius: 0.4rem;
+      display: flex; align-items: center; justify-content: center; font-size: 0.9rem;
+    }
+    .section-title .icon.green { background: rgba(5,223,114,0.15); color: #05df72; }
+    .section-title .icon.blue  { background: rgba(48,128,255,0.15); color: #3080ff; }
+    .section-title .icon.amber { background: rgba(252,187,0,0.15);  color: #fcbb00; }
+    .section-title .icon.teal  { background: rgba(0,211,189,0.15);  color: #00d3bd; }
+    .section-title .icon.pink  { background: rgba(246,51,154,0.15); color: #f6339a; }
+
+    .body-text { color: var(--text-muted); font-size: 0.9375rem; line-height: 1.75; }
+    .body-text p + p { margin-top: 0.85rem; }
+    .body-text a { color: var(--brand-primary); }
+    hr.section-divider { border: none; border-top: 1px solid var(--border-color); margin: 1.25rem 0; }
+
+    .contract-table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; font-size: 0.875rem; }
+    .contract-table th, .contract-table td {
+      text-align: left; padding: 0.65rem 1rem; border-bottom: 1px solid var(--border-color);
+    }
+    .contract-table th { font-weight: 600; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.07em; }
+    .contract-table td:last-child { font-family: ui-monospace, monospace; font-size: 0.78rem; color: var(--brand-primary); word-break: break-all; }
+    .contract-table tr:last-child td { border-bottom: none; }
+
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+    .badge-critical { background: rgba(251,44,54,0.15); color: #fb2c36; }
+    .badge-high     { background: rgba(255,139,26,0.15); color: #ff8b1a; }
+    .badge-medium   { background: rgba(252,187,0,0.15);  color: #fcbb00; }
+    .badge-low      { background: rgba(5,223,114,0.15);  color: #05df72; }
+    .badge-info     { background: rgba(48,128,255,0.15); color: #3080ff; }
+
+    .impact-list { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem; }
+    .impact-list li { display: flex; align-items: flex-start; gap: 0.75rem; color: var(--text-muted); font-size: 0.9375rem; }
+    .impact-list li .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand-primary); margin-top: 7px; flex-shrink: 0; }
+
+    .sidebar { display: flex; flex-direction: column; gap: 1rem; }
+    .sidebar-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 1rem; padding: 1.5rem; }
+    .sidebar-card h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-light); }
+    .stat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem; }
+    .stat-row:last-child { margin-bottom: 0; }
+    .stat-label { font-size: 0.8rem; color: var(--text-muted); }
+    .stat-value { font-size: 0.9rem; font-weight: 600; }
+    .stat-value.green { color: #05df72; }
+    .nav-links { display: flex; flex-direction: column; gap: 0.3rem; }
+    .nav-links a { display: block; padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; color: var(--text-muted); text-decoration: none; transition: color 0.15s, background 0.15s; }
+    .nav-links a:hover { color: var(--text-light); background: rgba(255,255,255,0.05); }
+    .nav-links a.active { color: var(--brand-primary); background: rgba(114,225,226,0.08); }
+
+    .site-footer { border-top: 1px solid var(--border-color); background: rgba(15,23,43,0.8); padding: 3rem 1.5rem 2rem; }
+    .footer-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 2.5rem; }
+    @media (max-width: 768px) { .footer-inner { grid-template-columns: 1fr 1fr; } .footer-brand { grid-column: 1 / -1; } }
+    .footer-brand p { color: var(--text-muted); font-size: 0.875rem; max-width: 280px; line-height: 1.6; }
+    .footer-col h4 { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 1rem; }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
+    .footer-col ul li a { font-size: 0.875rem; color: var(--text-muted); text-decoration: none; }
+    .footer-col ul li a:hover { color: var(--text-light); }
+    .footer-bottom { max-width: 1200px; margin: 2rem auto 0; padding-top: 1.5rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="site-logo">
+        <div class="logo-icon">OB</div>
+        <span class="logo-text">Origin</span>
+        <span class="logo-badge">Bug Bounty</span>
+      </a>
+      <nav class="site-nav">
+        <a href="index.html">Overview</a>
+        <a href="mainnet.html" class="active">Mainnet</a>
+        <a href="testnet.html">Testnet</a>
+        <a href="documentation.html">Docs</a>
+        <a href="smart-contracts.html">Smart Contracts</a>
+        <a href="rewards.html">Rewards</a>
+      </nav>
+      <a href="https://immunefi.com/bug-bounty/originprotocol/" class="header-cta" target="_blank" rel="noopener">Submit a Bug</a>
+    </div>
+  </header>
+
+  <div class="page-hero">
+    <p class="breadcrumb"><a href="index.html">Overview</a> / Mainnet Assets</p>
+    <h1>Mainnet <span>Assets</span></h1>
+    <p>All Ethereum mainnet smart contracts that are currently in scope for the Origin Bug Bounty program.</p>
+  </div>
+
+  <div class="page-layout">
+    <main>
+
+      <!-- Overview -->
+      <div class="content-section">
+        <h2 class="section-title"><span class="icon green">🔗</span> Mainnet Overview</h2>
+        <div class="body-text">
+          <p>
+            Origin Protocol's mainnet deployment runs on <strong style="color:var(--text-light)">Ethereum Mainnet</strong>.
+            The suite includes the Origin Dollar (OUSD) stablecoin, Origin Ether (OETH), and supporting infrastructure
+            such as the Vault, various yield strategies, governance contracts, and the OGN token.
+          </p>
+          <p>
+            Researchers are expected to work with local forks of mainnet when testing. Any testing directly
+            against live mainnet contracts is strictly prohibited and will void eligibility for rewards. All
+            critical and high-severity findings must include a runnable Proof of Concept (PoC).
+          </p>
+          <p>
+            The contracts listed on this page represent the primary attack surface for smart contract vulnerabilities.
+            The team uses a multi-sig governance model, and any vulnerability that can bypass admin controls
+            or drain funds is considered Critical severity.
+          </p>
+        </div>
+      </div>
+
+      <!-- OUSD Contracts -->
+      <div class="content-section">
+        <h2 class="section-title"><span class="icon blue">💲</span> OUSD Contracts</h2>
+        <div class="body-text">
+          <p>
+            Origin Dollar (OUSD) is a yield-bearing stablecoin that automatically accrues yield from
+            multiple DeFi protocols. The OUSD system consists of the token contract, a Vault that
+            manages backing stablecoins, and a set of Strategy contracts that deploy capital.
+          </p>
+        </div>
+        <table class="contract-table">
+          <thead>
+            <tr><th>Contract</th><th>Type</th><th>Address</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>OUSD Token</td><td><span class="badge badge-info">ERC-20</span></td><td>0x2A8e1E676Ec238d8A992307B495b45B3fEAa5e86</td></tr>
+            <tr><td>OUSD Vault</td><td><span class="badge badge-critical">Core</span></td><td>0xE75D77B1865Ae93c7eaa3040B038D7aA7BC02F70</td></tr>
+            <tr><td>VaultAdmin</td><td><span class="badge badge-high">Admin</span></td><td>0xcC1A2bd1a459be0C7fAd3B7F9Fa9a6CBBFE9BFa</td></tr>
+            <tr><td>Dripper</td><td><span class="badge badge-info">Yield</span></td><td>0xc0F42F73b8f01849a2DD99753524d4ba14317EB3</td></tr>
+            <tr><td>Harvester</td><td><span class="badge badge-info">Yield</span></td><td>0x21Fb5812D70B3396880D30e90D9e5C1202266c89</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- OETH Contracts -->
+      <div class="content-section">
+        <h2 class="section-title"><span class="icon amber">⟠</span> OETH Contracts</h2>
+        <div class="body-text">
+          <p>
+            Origin Ether (OETH) is a liquid staking token that generates yield from ETH staking and
+            liquidity provision. OETH is backed by stETH, rETH, frxETH, and native ETH. The architecture
+            mirrors OUSD but is optimised for ETH-denominated assets and LST integrations.
+          </p>
+          <p>
+            Security researchers should pay particular attention to the rebase mechanism, the price oracle
+            integrations used by the Vault, and any cross-strategy interactions that could result in
+            incorrect share accounting or loss of funds.
+          </p>
+        </div>
+        <table class="contract-table">
+          <thead>
+            <tr><th>Contract</th><th>Type</th><th>Address</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>OETH Token</td><td><span class="badge badge-info">ERC-20</span></td><td>0x856c4Efb76C1D1AE02e20CEB03A2A6a08b0b8dC3</td></tr>
+            <tr><td>OETH Vault</td><td><span class="badge badge-critical">Core</span></td><td>0x39254033945AA2E4809Cc2977E7087BEE48bd7Ab</td></tr>
+            <tr><td>OETH Zapper</td><td><span class="badge badge-medium">Helper</span></td><td>0x9858e47BCbBe6fBAC040519B02d7cd4B2C470C66</td></tr>
+            <tr><td>OETH Dripper</td><td><span class="badge badge-info">Yield</span></td><td>0xc0F42F73b8f01849a2DD99753524d4ba14317EB3</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Governance & OGN -->
+      <div class="content-section">
+        <h2 class="section-title"><span class="icon teal">🗳</span> Governance &amp; OGN</h2>
+        <div class="body-text">
+          <p>
+            Origin's governance contracts control critical system parameters through a timelock and
+            multi-sig structure. The OGN token powers governance participation. Vulnerabilities in
+            governance that allow unauthorized actors to execute proposals or bypass timelocks are
+            classified as Critical severity.
+          </p>
+          <p>
+            Note: The old OGN staking contract at
+            <code style="font-size:0.85em;color:var(--brand-primary)">0x501804B374EF06fa9C427476147ac09F1551B9A0</code>
+            is explicitly out of scope for this program. Only the contracts listed here are covered.
+          </p>
+        </div>
+        <table class="contract-table">
+          <thead>
+            <tr><th>Contract</th><th>Type</th><th>Address</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>OGN Token</td><td><span class="badge badge-info">ERC-20</span></td><td>0x8207c1FfC5B6804F6024322CcF34F29c3541Ae26</td></tr>
+            <tr><td>Timelock</td><td><span class="badge badge-critical">Gov</span></td><td>0x35918cDE7233F2dD33fA41ae3Cb6aE0e42741765</td></tr>
+            <tr><td>5-of-8 Multisig</td><td><span class="badge badge-high">Admin</span></td><td>0xbe2AB3d3d8F6a32b96414ebbd865dBD276d3d899</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- In-Scope Impacts -->
+      <div class="content-section">
+        <h2 class="section-title"><span class="icon pink">🎯</span> In-Scope Impacts (Mainnet)</h2>
+        <div class="body-text">
+          <p>The following impact categories are considered in-scope for mainnet contract vulnerabilities:</p>
+        </div>
+        <ul class="impact-list" style="margin-top:0.75rem">
+          <li><span class="dot"></span>Direct theft or permanent freezing of user funds</li>
+          <li><span class="dot"></span>Theft of unclaimed yield exceeding 10% of total yield</li>
+          <li><span class="dot"></span>Protocol insolvency or manipulation of OUSD/OETH peg</li>
+          <li><span class="dot"></span>Unauthorized execution of governance actions or admin functions</li>
+          <li><span class="dot"></span>Smart contract bugs enabling re-entrancy or flash-loan exploits</li>
+          <li><span class="dot"></span>Oracle manipulation leading to incorrect price calculations in the Vault</li>
+          <li><span class="dot"></span>Bypassing timelock or multi-sig restrictions</li>
+        </ul>
+      </div>
+
+    </main>
+
+    <aside class="sidebar">
+      <div class="sidebar-card">
+        <h3>Network Info</h3>
+        <div class="stat-row"><span class="stat-label">Chain</span><span class="stat-value">Ethereum</span></div>
+        <div class="stat-row"><span class="stat-label">Chain ID</span><span class="stat-value">1</span></div>
+        <div class="stat-row"><span class="stat-label">Contracts</span><span class="stat-value green">12+</span></div>
+        <div class="stat-row"><span class="stat-label">Max Bounty</span><span class="stat-value green">$1,000,000</span></div>
+      </div>
+      <div class="sidebar-card">
+        <h3>Pages</h3>
+        <div class="nav-links">
+          <a href="index.html">Overview</a>
+          <a href="mainnet.html" class="active">Mainnet Assets</a>
+          <a href="testnet.html">Testnet Assets</a>
+          <a href="documentation.html">Documentation</a>
+          <a href="smart-contracts.html">Smart Contracts</a>
+          <a href="rewards.html">Rewards</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem">
+          <div class="logo-icon" style="width:28px;height:28px;font-size:0.75rem">OB</div>
+          <span style="font-weight:700">Origin Bug Bounty</span>
+        </div>
+        <p>Securing DeFi through responsible disclosure. Report vulnerabilities in Origin Protocol smart contracts and applications.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Program</h4>
+        <ul>
+          <li><a href="index.html">Overview</a></li>
+          <li><a href="rewards.html">Rewards</a></li>
+          <li><a href="mainnet.html">Mainnet</a></li>
+          <li><a href="testnet.html">Testnet</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Technical</h4>
+        <ul>
+          <li><a href="smart-contracts.html">Smart Contracts</a></li>
+          <li><a href="documentation.html">Documentation</a></li>
+          <li><a href="https://docs.ousd.com/" target="_blank" rel="noopener">OUSD Docs</a></li>
+          <li><a href="https://github.com/OriginProtocol" target="_blank" rel="noopener">GitHub</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="https://immunefi.com/terms/" target="_blank" rel="noopener">Terms of Use</a></li>
+          <li><a href="https://immunefi.com/privacy/" target="_blank" rel="noopener">Privacy Policy</a></li>
+          <li><a href="https://immunefi.com/responsible-publication/" target="_blank" rel="noopener">Responsible Disclosure</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Origin Bug Bounty · Powered by Immunefi</span>
+      <span>Last updated: April 17, 2026</span>
+    </div>
+  </footer>
+
+</body>
+</html>

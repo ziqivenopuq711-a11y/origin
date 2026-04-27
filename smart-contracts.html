@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Contracts — Origin Bug Bounty</title>
+  <link rel="stylesheet" href="13svqqn_tv061.css" />
+  <style>
+    :root {
+      --brand-primary: #72e1e2;
+      --brand-secondary: #9d10bf;
+      --bg-dark: #0f172b;
+      --bg-card: #1d293d;
+      --text-light: #f1f5f9;
+      --text-muted: #90a1b9;
+      --border-color: #314158;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background-color: var(--bg-dark); color: var(--text-light); font-family: Rubik, ui-sans-serif, system-ui, sans-serif; line-height: 1.6; }
+
+    .site-header { position: sticky; top: 0; z-index: 100; background-color: rgba(15,23,43,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-color); }
+    .header-inner { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .site-logo { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: inherit; }
+    .logo-icon { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.875rem; color: #fff; }
+    .logo-text { font-weight: 700; font-size: 1.1rem; letter-spacing: -0.02em; }
+    .logo-badge { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--brand-primary); border: 1px solid var(--brand-primary); padding: 2px 7px; border-radius: 999px; }
+    .site-nav { display: flex; align-items: center; gap: 0.25rem; }
+    .site-nav a { padding: 0.4rem 0.85rem; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 500; color: var(--text-muted); text-decoration: none; transition: color 0.15s, background 0.15s; }
+    .site-nav a:hover { color: var(--text-light); background: rgba(255,255,255,0.05); }
+    .site-nav a.active { color: var(--brand-primary); background: rgba(114,225,226,0.08); }
+    .header-cta { display: inline-flex; align-items: center; background: var(--brand-primary); color: #121212 !important; padding: 0.45rem 1.1rem; border-radius: 999px; font-size: 0.875rem; font-weight: 600; text-decoration: none; }
+    .header-cta:hover { background: #67cccd; }
+
+    .page-hero { max-width: 1200px; margin: 0 auto; padding: 3rem 1.5rem 2rem; }
+    .breadcrumb { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+    .breadcrumb a { color: var(--brand-primary); text-decoration: none; }
+    .page-hero h1 { font-size: clamp(1.6rem, 3.5vw, 2.5rem); font-weight: 700; line-height: 1.15; letter-spacing: -0.025em; }
+    .page-hero h1 span { color: var(--brand-primary); }
+    .page-hero p { color: var(--text-muted); font-size: 1rem; max-width: 600px; margin-top: 0.75rem; }
+
+    .page-layout { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem 4rem; display: grid; grid-template-columns: 1fr 280px; gap: 2rem; }
+    @media (max-width: 900px) { .page-layout { grid-template-columns: 1fr; } .sidebar { order: -1; } }
+
+    .content-section { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 1rem; padding: 2rem; margin-bottom: 1.5rem; }
+    .section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem; }
+    .section-title .icon { width: 28px; height: 28px; border-radius: 0.4rem; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+    .section-title .icon.blue  { background: rgba(48,128,255,0.15); color: #3080ff; }
+    .section-title .icon.green { background: rgba(5,223,114,0.15);  color: #05df72; }
+    .section-title .icon.amber { background: rgba(252,187,0,0.15);  color: #fcbb00; }
+    .section-title .icon.teal  { background: rgba(0,211,189,0.15);  color: #00d3bd; }
+    .section-title .icon.pink  { background: rgba(246,51,154,0.15); color: #f6339a; }
+
+    .body-text { color: var(--text-muted); font-size: 0.9375rem; line-height: 1.75; }
+    .body-text p + p { margin-top: 0.85rem; }
+    .body-text a { color: var(--brand-primary); }
+    hr.section-divider { border: none; border-top: 1px solid var(--border-color); margin: 1.25rem 0; }
+
+    .contract-table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; font-size: 0.875rem; }
+    .contract-table th, .contract-table td { text-align: left; padding: 0.65rem 1rem; border-bottom: 1px solid var(--border-color); }
+    .contract-table th { font-weight: 600; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.07em; }
+    .contract-table .addr { font-family: ui-monospace, monospace; font-size: 0.78rem; color: var(--brand-primary); word-break: break-all; }
+    .contract-table tr:last-child td { border-bottom: none; }
+
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+    .badge-critical { background: rgba(251,44,54,0.15); color: #fb2c36; }
+    .badge-high     { background: rgba(255,139,26,0.15); color: #ff8b1a; }
+    .badge-medium   { background: rgba(252,187,0,0.15);  color: #fcbb00; }
+    .badge-info     { background: rgba(48,128,255,0.15); color: #3080ff; }
+    .badge-teal     { background: rgba(0,211,189,0.15);  color: #00d3bd; }
+
+    .code-block { background: rgba(0,0,0,0.35); border: 1px solid var(--border-color); border-radius: 0.6rem; padding: 1rem 1.2rem; font-family: ui-monospace, monospace; font-size: 0.82rem; color: #90c5ff; line-height: 1.7; overflow-x: auto; margin-top: 0.75rem; }
+    .code-block .comment { color: #62748e; }
+    .code-block .keyword { color: var(--brand-primary); }
+    .code-block .fn-name { color: #f6339a; }
+
+    .sidebar { display: flex; flex-direction: column; gap: 1rem; }
+    .sidebar-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 1rem; padding: 1.5rem; }
+    .sidebar-card h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-light); }
+    .stat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem; }
+    .stat-row:last-child { margin-bottom: 0; }
+    .stat-label { font-size: 0.8rem; color: var(--text-muted); }
+    .stat-value { font-size: 0.9rem; font-weight: 600; }
+    .stat-value.green { color: #05df72; }
+    .nav-links { display: flex; flex-direction: column; gap: 0.3rem; }
+    .nav-links a { display: block; padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; color: var(--text-muted); text-decoration: none; transition: color 0.15s, background 0.15s; }
+    .nav-links a:hover { color: var(--text-light); background: rgba(255,255,255,0.05); }
+    .nav-links a.active { color: var(--brand-primary); background: rgba(114,225,226,0.08); }
+
+    .site-footer { border-top: 1px solid var(--border-color); background: rgba(15,23,43,0.8); padding: 3rem 1.5rem 2rem; }
+    .footer-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 2.5rem; }
+    @media (max-width: 768px) { .footer-inner { grid-template-columns: 1fr 1fr; } .footer-brand { grid-column: 1 / -1; } }
+    .footer-brand p { color: var(--text-muted); font-size: 0.875rem; max-width: 280px; line-height: 1.6; }
+    .footer-col h4 { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 1rem; }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
+    .footer-col ul li a { font-size: 0.875rem; color: var(--text-muted); text-decoration: none; }
+    .footer-col ul li a:hover { color: var(--text-light); }
+    .footer-bottom { max-width: 1200px; margin: 2rem auto 0; padding-top: 1.5rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="site-logo">
+        <div class="logo-icon">OB</div>
+        <span class="logo-text">Origin</span>
+        <span class="logo-badge">Bug Bounty</span>
+      </a>
+      <nav class="site-nav">
+        <a href="index.html">Overview</a>
+        <a href="mainnet.html">Mainnet</a>
+        <a href="testnet.html">Testnet</a>
+        <a href="documentation.html">Docs</a>
+        <a href="smart-contracts.html" class="active">Smart Contracts</a>
+        <a href="rewards.html">Rewards</a>
+      </nav>
+      <a href="https://immunefi.com/bug-bounty/originprotocol/" class="header-cta" target="_blank" rel="noopener">Submit a Bug</a>
+    </div>
+  </header>
+
+  <div class="page-hero">
+    <p class="breadcrumb"><a href="index.html">Overview</a> / Smart Contracts</p>
+    <h1>Smart <span>Contracts</span></h1>
+    <p>Complete list of in-scope deployed smart contracts with addresses, types, and upgrade status.</p>
+  </div>
+
+  <div class="page-layout">
+    <main>
+
+      <!-- Introduction -->
+      <div class="content-section">
+        <h2 class="section-title"><span class="icon blue">📃</span> Smart Contract Overview</h2>
+        <div class="body-text">
+          <p>
+            Origin Protocol's smart contract suite consists of upgradeable proxy contracts, strategy implementations,
+            governance contracts, and token contracts. All contracts are written in Solidity and deployed on
+            Ethereum mainnet.
+          </p>
+          <p>
+            The system uses the <strong style="color:var(--text-light)">Transparent Proxy</strong> upgrade pattern for
+            most contracts, with an admin multisig and timelock controlling upgrades. Critical upgrades require
+            passing through a 48-hour timelock enforced by the governance contract.
+          </p>
+          <p>
+            Security researchers should pay particular attention to storage layout compatibility during upgrades,
+            re-entrancy vectors in the Vault's multi-step operations, and any assumptions about external protocol
+            behaviour (such as stablecoin pegs or oracle price validity).
+          </p>
+        </div>
+      </div>
+
+      <!-- Core Contracts -->
+      <div class="content-section">
+        <h2 class="section-title"><span class="icon green">🏦</span> Core Protocol Contracts</h2>
+        <div class="body-text">
+          <p>These are the primary contracts that form the heart of the Origin Protocol system.
+             Bugs in these contracts are typically rated Critical or High severity.</p>
+        </div>
+        <table class="contract-table">
+          <thead><tr><th>Contract</th><th>Severity Focus</th><th>Upgradeable</th><th>Address</th></tr></thead>
+          <tbody>
+            <tr><td>OUSD Token</td><td><span class="badge badge-critical">Critical</span></td><td>Yes (Proxy)</td><td class="addr">0x2A8e1E676Ec238d8A992307B495b45B3fEAa5e86</td></tr>
+            <tr><td>OUSD Vault</td><td><span class="badge badge-critical">Critical</span></td><td>Yes (Proxy)</td><td class="addr">0xE75D77B1865Ae93c7eaa3040B038D7aA7BC02F70</td></tr>
+            <tr><td>OETH Token</td><td><span class="badge badge-critical">Critical</span></td><td>Yes (Proxy)</td><td class="addr">0x856c4Efb76C1D1AE02e20CEB03A2A6a08b0b8dC3</td></tr>
+            <tr><td>OETH Vault</td><td><span class="badge badge-critical">Critical</span></td><td>Yes (Proxy)</td><td class="addr">0x39254033945AA2E4809Cc2977E7087BEE48bd7Ab</td></tr>
+            <tr><td>VaultAdmin (OUSD)</td><td><span class="badge badge-high">High</span></td><td>Yes (Proxy)</td><td class="addr">0xcC1A2bd1a459be0C7fAd3B7F9Fa9a6CBBFE9BFa</td></tr>
+            <tr><td>Timelock</td><td><span class="badge badge-high">High</span></td><td>No</td><td class="addr">0x35918cDE7233F2dD33fA41ae3Cb6aE0e42741765</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Strategy Contracts -->
+      <div class="content-section">
+        <h2 class="section-title"><span class="icon amber">📈</span> Yield Strategy Contracts</h2>
+        <div class="body-text">
+          <p>
+            Strategies are responsible for deploying capital from the Vault into external DeFi protocols.
+            Each strategy must implement the <code style="font-size:0.85em;color:var(--brand-primary)">IStrategy</code>
+            interface and is governed by the Vault's allocation logic. Bugs that allow a strategy to over-report
+            its balance or fail to return funds are considered High to Critical severity.
+          </p>
+        </div>
+        <table class="contract-table">
+          <thead><tr><th>Strategy</th><th>Protocol</th><th>Asset</th><th>Address</th></tr></thead>
+          <tbody>
+            <tr><td>Aave V2 Strategy</td><td><span class="badge badge-teal">Aave</span></td><td>USDC/DAI/USDT</td><td class="addr">0x5e3646A1Db86993f73E6b74A57D8640B69F7e259</td></tr>
+            <tr><td>Compound Strategy</td><td><span class="badge badge-teal">Compound</span></td><td>USDC/DAI</td><td class="addr">0x9c459eeb3FA179a40Cd3EB5D7eAef8d571ea9161</td></tr>
+            <tr><td>Convex Strategy</td><td><span class="badge badge-teal">Convex</span></td><td>3CRV</td><td class="addr">0xEA2Ef2e2E5A749D4A66b41Db9aD85a38Aa264cb3</td></tr>
+            <tr><td>Morpho Aave V2</td><td><span class="badge badge-teal">Morpho</span></td><td>USDC/USDT</td><td class="addr">0x79F2188EF9350A1dC11A2d66b4EFaD6A4F23423b</td></tr>
+            <tr><td>Frax AMO</td><td><span class="badge badge-teal">Frax</span></td><td>FRAX/USDC</td><td class="addr">0x1827F9eA98E0bf96550b2FC20F7233277FcD7E63</td></tr>
+            <tr><td>Lido Strategy (OETH)</td><td><span class="badge badge-teal">Lido</span></td><td>stETH</td><td class="addr">0x3ff8654D633D4eA0faE24c52Aec73B4A20D0d0e3</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Key Function Signatures -->
+      <div class="content-section">
+        <h2 class="section-title"><span class="icon teal">🔧</span> Key Function Signatures</h2>
+        <div class="body-text">
+          <p>
+            These are the most security-critical functions in the OUSD Vault. Understanding the expected
+            behaviour of each function is essential before reporting a vulnerability.
+          </p>
+        </div>
+        <div class="code-block">
+<span class="comment">// OUSD Vault — critical entry/exit points</span>
+<span class="keyword">function</span> <span class="fn-name">mint</span>(address _asset, uint256 _amount, uint256 _minimumOusdAmount) external;
+<span class="keyword">function</span> <span class="fn-name">redeem</span>(uint256 _amount, uint256 _minimumUnitAmount) external;
+<span class="keyword">function</span> <span class="fn-name">rebase</span>() external;
+<span class="keyword">function</span> <span class="fn-name">allocate</span>() external;
+<span class="keyword">function</span> <span class="fn-name">harvest</span>(address _strategy) external;
+
+<span class="comment">// VaultAdmin — governance-controlled</span>
+<span class="keyword">function</span> <span class="fn-name">addStrategy</span>(address _addr) external;
+<span class="keyword">function</span> <span class="fn-name">removeStrategy</span>(address _addr) external;
+<span class="keyword">function</span> <span class="fn-name">setAssetDefaultStrategy</span>(address _asset, address _strategy) external;
+        </div>
+        <div class="body-text" style="margin-top:1rem">
+          <p>
+            When researching the <code style="font-size:0.85em;color:var(--brand-primary)">mint</code> and
+            <code style="font-size:0.85em;color:var(--brand-primary)">redeem</code> functions, pay particular
+            attention to price oracle calls, slippage parameter validation, and interactions with strategy
+            balances that may be stale or manipulated.
+          </p>
+        </div>
+      </div>
+
+      <!-- Upgrade Pattern -->
+      <div class="content-section">
+        <h2 class="section-title"><span class="icon pink">🔐</span> Upgrade Pattern &amp; Access Controls</h2>
+        <div class="body-text">
+          <p>
+            All core contracts use the <strong style="color:var(--text-light)">OpenZeppelin Transparent Proxy</strong>
+            pattern. The proxy admin is the Timelock contract, which is controlled by a 5-of-8 multi-sig operated
+            by the Origin Protocol team.
+          </p>
+          <p>
+            Upgrades must be proposed via the Timelock's <code style="font-size:0.85em;color:var(--brand-primary)">queueTransaction</code>
+            function and can only be executed after a 48-hour delay. This delay gives the community time to react
+            to malicious or erroneous upgrade proposals.
+          </p>
+          <p>
+            Critical vulnerabilities include any mechanism that allows bypassing the timelock delay, upgrading
+            a proxy without going through the multi-sig, or manipulating storage in the implementation contract
+            to affect the proxy's state.
+          </p>
+        </div>
+      </div>
+
+    </main>
+
+    <aside class="sidebar">
+      <div class="sidebar-card">
+        <h3>Contract Stats</h3>
+        <div class="stat-row"><span class="stat-label">Total In-Scope</span><span class="stat-value green">34</span></div>
+        <div class="stat-row"><span class="stat-label">Core Contracts</span><span class="stat-value">6</span></div>
+        <div class="stat-row"><span class="stat-label">Strategies</span><span class="stat-value">6+</span></div>
+        <div class="stat-row"><span class="stat-label">Upgradeable</span><span class="stat-value">Yes (Proxy)</span></div>
+        <div class="stat-row"><span class="stat-label">Language</span><span class="stat-value">Solidity</span></div>
+      </div>
+      <div class="sidebar-card">
+        <h3>Pages</h3>
+        <div class="nav-links">
+          <a href="index.html">Overview</a>
+          <a href="mainnet.html">Mainnet Assets</a>
+          <a href="testnet.html">Testnet Assets</a>
+          <a href="documentation.html">Documentation</a>
+          <a href="smart-contracts.html" class="active">Smart Contracts</a>
+          <a href="rewards.html">Rewards</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem">
+          <div class="logo-icon" style="width:28px;height:28px;font-size:0.75rem">OB</div>
+          <span style="font-weight:700">Origin Bug Bounty</span>
+        </div>
+        <p>Securing DeFi through responsible disclosure. Report vulnerabilities in Origin Protocol smart contracts and applications.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Program</h4>
+        <ul>
+          <li><a href="index.html">Overview</a></li>
+          <li><a href="rewards.html">Rewards</a></li>
+          <li><a href="mainnet.html">Mainnet</a></li>
+          <li><a href="testnet.html">Testnet</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Technical</h4>
+        <ul>
+          <li><a href="smart-contracts.html">Smart Contracts</a></li>
+          <li><a href="documentation.html">Documentation</a></li>
+          <li><a href="https://docs.ousd.com/" target="_blank" rel="noopener">OUSD Docs</a></li>
+          <li><a href="https://github.com/OriginProtocol" target="_blank" rel="noopener">GitHub</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="https://immunefi.com/terms/" target="_blank" rel="noopener">Terms of Use</a></li>
+          <li><a href="https://immunefi.com/privacy/" target="_blank" rel="noopener">Privacy Policy</a></li>
+          <li><a href="https://immunefi.com/responsible-publication/" target="_blank" rel="noopener">Responsible Disclosure</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Origin Bug Bounty · Powered by Immunefi</span>
+      <span>Last updated: April 17, 2026</span>
+    </div>
+  </footer>
+
+</body>
+</html>
